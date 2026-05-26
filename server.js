@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 
 const app = express();
 app.use(cors());
@@ -59,3 +58,4 @@ mongoose.connect(process.env.MONGO_URI)
     app.listen(process.env.PORT || 3000, () => console.log('Servidor en puerto 3000'));
   })
   .catch(err => console.error('Error DB:', err));
+
