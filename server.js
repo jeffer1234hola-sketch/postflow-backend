@@ -53,12 +53,9 @@ app.get('/', (req, res) => {
 });
 
 // === INICIAR SERVIDOR ===
-async function startServer() {
-  const mongod = await MongoMemoryServer.create();
-  const uri = mongod.getUri();
-  await mongoose.connect(uri);
-  console.log('✅ Base de datos lista');
-  app.listen(3000, () => console.log('🚀 Servidor en puerto 3000'));
-}
-
-startServer();
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('Base de datos lista');
+    app.listen(process.env.PORT || 3000, () => console.log('Servidor en puerto 3000'));
+  })
+  .catch(err => console.error('Error DB:', err));
