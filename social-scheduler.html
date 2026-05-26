@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostFlow — Tu Centro de Contenido</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #222232;
+    --accent: #7c6aff;
+    --accent2: #ff6a9f;
+    --accent3: #6affcb;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --danger: #ff4d6a;
+    --success: #3dffa0;
+    --warning: #ffb84d;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* === SIDEBAR === */
+  .sidebar {
+    width: 230px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    padding: 24px 20px 20px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo span { font-weight: 300; opacity: 0.7; }
+
+  nav { padding: 12px 10px; flex: 1; }
+
+  .nav-section { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 14px 10px 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--muted);
+    transition: all 0.2s;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: var(--card); color: var(--text); }
+  .nav-item.active { background: rgba(124,106,255,0.15); color: var(--accent); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .profile-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--card);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; color: white; flex-shrink: 0;
+  }
+
+  .profile-info { flex: 1; overflow: hidden; }
+  .profile-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-plan { font-size: 11px; color: var(--accent); }
+
+  /* === MAIN === */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 10;
+  }
+
+  .page-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+  .page-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #9580ff; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+  .btn-danger { background: rgba(255,77,106,0.15); color: var(--danger); border: 1px solid rgba(255,77,106,0.3); }
+
+  /* === CONTENT === */
+  .content { padding: 28px; flex: 1; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; }
+
+  .tab {
+    padding: 8px 18px;
+    border-radius: 9px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .tab.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* STATS ROW */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-color, var(--accent));
+  }
+
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+  .stat-delta { font-size: 12px; margin-top: 4px; }
+  .stat-delta.up { color: var(--success); }
+  .stat-delta.down { color: var(--danger); }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 48px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(124,106,255,0.05);
+  }
+
+  .upload-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+
+  .upload-icon { font-size: 48px; margin-bottom: 16px; }
+  .upload-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .upload-sub { font-size: 14px; color: var(--muted); }
+  .upload-formats { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .format-tag { font-size: 11px; padding: 4px 10px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+
+  /* VIDEOS GRID */
+  .videos-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+
+  .videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .video-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .video-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); border-color: var(--accent); }
+
+  .video-thumb {
+    aspect-ratio: 9/16;
+    background: var(--surface);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .video-thumb-bg {
+    position: absolute; inset: 0;
+    opacity: 0.4;
+  }
+
+  .play-btn {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative; z-index: 1;
+  }
+
+  .video-duration {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(0,0,0,0.7);
+    font-size: 11px; padding: 3px 7px; border-radius: 5px;
+  }
+
+  .video-status {
+    position: absolute; top: 8px; left: 8px;
+    font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 600;
+  }
+
+  .status-scheduled { background: rgba(255,184,77,0.2); color: var(--warning); }
+  .status-published { background: rgba(61,255,160,0.2); color: var(--success); }
+  .status-draft { background: rgba(107,107,133,0.2); color: var(--muted); }
+  .status-failed { background: rgba(255,77,106,0.2); color: var(--danger); }
+
+  .video-info { padding: 12px; }
+  .video-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .video-meta { font-size: 11px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  .video-platforms { display: flex; gap: 4px; margin-top: 8px; }
+  .platform-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+
+  /* SCHEDULE MODAL */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    width: 580px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+  }
+
+  .modal-backdrop.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    padding: 24px 24px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+  .modal-close { background: var(--surface); border: 1px solid var(--border); color: var(--muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body { padding: 24px; }
+
+  .form-group { margin-bottom: 20px; }
+  .form-label { font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 8px; display: block; }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 90px; }
+  .form-select option { background: var(--card); }
+
+  .platforms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+  .platform-toggle {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .platform-toggle input { position: absolute; opacity: 0; }
+
+  .platform-toggle.checked { border-color: var(--accent); background: rgba(124,106,255,0.1); }
+
+  .platform-icon { font-size: 20px; }
+  .platform-name { font-size: 12px; font-weight: 500; }
+
+  .datetime-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-footer {
+    padding: 0 24px 24px;
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* CALENDAR VIEW */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cal-header { text-align: center; font-size: 11px; color: var(--muted); padding: 8px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cal-day {
+    aspect-ratio: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+    min-height: 80px;
+  }
+
+  .cal-day:hover { border-color: var(--accent); }
+  .cal-day.today { border-color: var(--accent); background: rgba(124,106,255,0.08); }
+  .cal-day.other-month { opacity: 0.3; }
+  .cal-day-num { font-weight: 600; font-size: 14px; }
+
+  .cal-event {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cal-event.ig { background: rgba(255,106,159,0.25); color: var(--accent2); }
+  .cal-event.tt { background: rgba(61,255,160,0.2); color: var(--accent3); }
+  .cal-event.yt { background: rgba(255,77,106,0.2); color: var(--danger); }
+  .cal-event.fb { background: rgba(124,106,255,0.2); color: var(--accent); }
+
+  /* ANALYTICS */
+  .analytics-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+  .chart-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; border-radius: 6px 6px 0 0; transition: opacity 0.2s; cursor: pointer; }
+  .bar:hover { opacity: 0.8; }
+  .bar-label { font-size: 10px; color: var(--muted); }
+
+  .platforms-breakdown { display: flex; flex-direction: column; gap: 12px; }
+  .platform-row { display: flex; align-items: center; gap: 12px; }
+  .platform-row-icon { font-size: 18px; width: 24px; }
+  .platform-bar-wrap { flex: 1; background: var(--surface); border-radius: 4px; height: 6px; overflow: hidden; }
+  .platform-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .platform-pct { font-size: 12px; font-weight: 600; min-width: 36px; text-align: right; }
+
+  /* QUEUE */
+  .queue-list { display: flex; flex-direction: column; gap: 10px; }
+  .queue-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+  }
+
+  .queue-item:hover { border-color: var(--border); background: rgba(255,255,255,0.02); }
+
+  .queue-thumb {
+    width: 48px; height: 64px;
+    border-radius: 8px;
+    background: var(--surface);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .queue-info { flex: 1; }
+  .queue-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .queue-time { font-size: 12px; color: var(--muted); }
+  .queue-platforms { display: flex; gap: 4px; margin-top: 6px; }
+
+  .queue-actions { display: flex; gap: 6px; }
+
+  /* AI CAPTION */
+  .ai-box {
+    background: linear-gradient(135deg, rgba(124,106,255,0.1), rgba(255,106,159,0.1));
+    border: 1px solid rgba(124,106,255,0.3);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .ai-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--accent); background: rgba(124,106,255,0.15); padding: 4px 10px; border-radius: 20px; margin-bottom: 12px; }
+  .ai-generated { font-size: 14px; line-height: 1.6; color: var(--text); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 200;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(61,255,160,0.4); }
+  .toast.error { border-color: rgba(255,77,106,0.4); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Loading pulse */
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+  @keyframes slideIn { from{transform:translateX(-10px);opacity:0} to{transform:translateX(0);opacity:1} }
+  .slide-in { animation: slideIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Post<span>Flow</span></div>
+
+  <nav>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="navigate('calendar')">
+      <span class="icon">📅</span> Calendario
+    </div>
+    <div class="nav-item" onclick="navigate('queue')">
+      <span class="icon">⏱</span> Cola de Posts
+      <span class="badge">4</span>
+    </div>
+
+    <div class="nav-section">Contenido</div>
+    <div class="nav-item" onclick="navigate('upload')">
+      <span class="icon">⬆️</span> Subir Videos
+    </div>
+    <div class="nav-item" onclick="navigate('library')">
+      <span class="icon">🎬</span> Biblioteca
+    </div>
+
+    <div class="nav-section">Analíticas</div>
+    <div class="nav-item" onclick="navigate('analytics')">
+      <span class="icon">📈</span> Métricas
+    </div>
+    <div class="nav-item" onclick="navigate('reports')">
+      <span class="icon">📋</span> Reportes
+    </div>
+
+    <div class="nav-section">Cuentas</div>
+    <div class="nav-item" onclick="navigate('accounts')">
+      <span class="icon">🔗</span> Redes Conectadas
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="profile-pill">
+      <div class="avatar">M</div>
+      <div class="profile-info">
+        <div class="profile-name">Mi Empresa</div>
+        <div class="profile-plan">✦ Plan Pro</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="page-subtitle" id="page-subtitle">Resumen de tu actividad en redes</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="showToast('🔄 Actualizando datos...', 'info')">↻ Actualizar</button>
+      <button class="btn btn-primary" onclick="openScheduleModal()">+ Programar Post</button>
+    </div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content">
+
+    <!-- === DASHBOARD === -->
+    <div id="view-dashboard" class="tab-panel active">
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent-color:#7c6aff">
+          <div class="stat-label">Posts Publicados</div>
+          <div class="stat-value">147</div>
+          <div class="stat-delta up">↑ 12% este mes</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#ff6a9f">
+          <div class="stat-label">Alcance Total</div>
+          <div class="stat-value">84.2K</div>
+          <div class="stat-delta up">↑ 23% vs anterior</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#6affcb">
+          <div class="stat-label">Engagement Rate</div>
+          <div class="stat-value">6.4%</div>
+          <div class="stat-delta up">↑ 0.8pts</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#ffb84d">
+          <div class="stat-label">Posts Pendientes</div>
+          <div class="stat-value">4</div>
+          <div class="stat-delta">Esta semana</div>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <div class="chart-title">Publicaciones esta semana</div>
+          <div class="bar-chart" id="bar-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Por Plataforma</div>
+          <div class="platforms-breakdown" id="platforms-breakdown"></div>
+        </div>
+      </div>
+
+      <div class="videos-header">
+        <div class="section-title">Recientes</div>
+        <button class="btn btn-ghost" style="font-size:12px" onclick="navigate('library')">Ver todos →</button>
+      </div>
+      <div class="videos-grid" id="recent-videos"></div>
+    </div>
+
+    <!-- === UPLOAD === -->
+    <div id="view-upload" class="tab-panel">
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" accept="video/*,image/*" multiple onchange="handleFileUpload(this)">
+        <div class="upload-icon">🎬</div>
+        <div class="upload-title">Arrastra tus videos aquí</div>
+        <div class="upload-sub">o haz clic para seleccionar archivos</div>
+        <div class="upload-formats">
+          <span class="format-tag">MP4</span>
+          <span class="format-tag">MOV</span>
+          <span class="format-tag">AVI</span>
+          <span class="format-tag">MKV</span>
+          <span class="format-tag">WebM</span>
+          <span class="format-tag">JPG/PNG</span>
+        </div>
+      </div>
+
+      <div id="uploaded-preview" style="display:none">
+        <div class="videos-header">
+          <div class="section-title">Archivos listos para programar</div>
+        </div>
+        <div class="videos-grid" id="upload-preview-grid"></div>
+      </div>
+    </div>
+
+    <!-- === LIBRARY === -->
+    <div id="view-library" class="tab-panel">
+      <div class="tabs">
+        <button class="tab active" onclick="filterLib('all', this)">Todos</button>
+        <button class="tab" onclick="filterLib('scheduled', this)">Programados</button>
+        <button class="tab" onclick="filterLib('published', this)">Publicados</button>
+        <button class="tab" onclick="filterLib('draft', this)">Borradores</button>
+      </div>
+      <div class="videos-grid" id="library-grid"></div>
+    </div>
+
+    <!-- === CALENDAR === -->
+    <div id="view-calendar" class="tab-panel">
+      <div class="videos-header">
+        <div class="section-title">Mayo 2026</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" style="padding:6px 12px">‹ Anterior</button>
+          <button class="btn btn-ghost" style="padding:6px 12px">Siguiente ›</button>
+        </div>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <!-- === QUEUE === -->
+    <div id="view-queue" class="tab-panel">
+      <div class="queue-list" id="queue-list"></div>
+    </div>
+
+    <!-- === ANALYTICS === -->
+    <div id="view-analytics" class="tab-panel">
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent-color:#ff6a9f">
+          <div class="stat-label">Impresiones</div>
+          <div class="stat-value">284K</div>
+          <div class="stat-delta up">↑ 18%</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#6affcb">
+          <div class="stat-label">Seguidores Ganados</div>
+          <div class="stat-value">+1,240</div>
+          <div class="stat-delta up">↑ 34%</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#7c6aff">
+          <div class="stat-label">Clicks en Bio</div>
+          <div class="stat-value">3,891</div>
+          <div class="stat-delta up">↑ 9%</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#ffb84d">
+          <div class="stat-label">Guardados</div>
+          <div class="stat-value">7,433</div>
+          <div class="stat-delta up">↑ 41%</div>
+        </div>
+      </div>
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <div class="chart-title">Alcance por día (últimas 4 semanas)</div>
+          <div class="bar-chart" id="analytics-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Mejor horario para publicar</div>
+          <div id="best-times" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === ACCOUNTS === -->
+    <div id="view-accounts" class="tab-panel">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+        <div id="accounts-grid"></div>
+      </div>
+    </div>
+
+    <!-- === REPORTS === -->
+    <div id="view-reports" class="tab-panel">
+      <div class="ai-box">
+        <div class="ai-badge">✨ IA — Resumen Automático</div>
+        <div class="ai-generated" id="ai-report">
+          Generando reporte inteligente de tu actividad...
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent-color:#7c6aff">
+          <div class="stat-label">Mejor Post del Mes</div>
+          <div class="stat-value" style="font-size:18px">Promo Verano</div>
+          <div class="stat-delta up">12.4K impresiones</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#6affcb">
+          <div class="stat-label">Plataforma Top</div>
+          <div class="stat-value" style="font-size:18px">Instagram</div>
+          <div class="stat-delta up">45% del alcance</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#ff6a9f">
+          <div class="stat-label">Hora con más interacción</div>
+          <div class="stat-value" style="font-size:18px">7 PM</div>
+          <div class="stat-delta up">Lunes–Jueves</div>
+        </div>
+        <div class="stat-card" style="--accent-color:#ffb84d">
+          <div class="stat-label">Hashtag más efectivo</div>
+          <div class="stat-value" style="font-size:18px">#colombia</div>
+          <div class="stat-delta up">+3.2K alcance adicional</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- SCHEDULE MODAL -->
+<div class="modal-backdrop" id="schedule-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Programar Publicación</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Título del Post</label>
+        <input class="form-input" id="modal-title" placeholder="Ej: Promo Verano 2026">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Caption / Descripción</label>
+        <textarea class="form-textarea" id="modal-caption" placeholder="Escribe tu caption aquí o usa IA para generarlo..."></textarea>
+        <button class="btn btn-ghost" style="margin-top:8px;font-size:12px" onclick="generateCaption()">✨ Generar Caption con IA</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Redes sociales</label>
+        <div class="platforms-grid">
+          <label class="platform-toggle" id="pt-ig">
+            <input type="checkbox" onchange="togglePlatform(this,'pt-ig')">
+            <span class="platform-icon">📸</span>
+            <span class="platform-name">Instagram</span>
+          </label>
+          <label class="platform-toggle" id="pt-tt">
+            <input type="checkbox" onchange="togglePlatform(this,'pt-tt')">
+            <span class="platform-icon">🎵</span>
+            <span class="platform-name">TikTok</span>
+          </label>
+          <label class="platform-toggle" id="pt-yt">
+            <input type="checkbox" onchange="togglePlatform(this,'pt-yt')">
+            <span class="platform-icon">▶️</span>
+            <span class="platform-name">YouTube</span>
+          </label>
+          <label class="platform-toggle" id="pt-fb">
+            <input type="checkbox" onchange="togglePlatform(this,'pt-fb')">
+            <span class="platform-icon">👥</span>
+            <span class="platform-name">Facebook</span>
+          </label>
+          <label class="platform-toggle" id="pt-tw">
+            <input type="checkbox" onchange="togglePlatform(this,'pt-tw')">
+            <span class="platform-icon">🐦</span>
+            <span class="platform-name">X / Twitter</span>
+          </label>
+          <label class="platform-toggle" id="pt-li">
+            <input type="checkbox" onchange="togglePlatform(this,'pt-li')">
+            <span class="platform-icon">💼</span>
+            <span class="platform-name">LinkedIn</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha y hora de publicación</label>
+        <div class="datetime-row">
+          <input class="form-input" type="date" id="modal-date">
+          <input class="form-input" type="time" id="modal-time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hashtags</label>
+        <input class="form-input" id="modal-hashtags" placeholder="#colombia #marketing #video">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="saveDraft()">Guardar borrador</button>
+      <button class="btn btn-primary" onclick="schedulePost()">✓ Programar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✓</span>
+  <span id="toast-text">Acción completada</span>
+</div>
+
+<script>
+// ==============================
+// DATA
+// ==============================
+const VIDEOS = [
+  { id:1, title:'Promo Verano 2026', duration:'0:45', status:'published', platforms:['ig','tt'], color:'linear-gradient(135deg,#ff6a9f,#ffb84d)', emoji:'🏖️' },
+  { id:2, title:'Lanzamiento Producto', duration:'1:12', status:'scheduled', platforms:['ig','yt','fb'], color:'linear-gradient(135deg,#7c6aff,#6affcb)', emoji:'🚀' },
+  { id:3, title:'Detrás de Cámaras', duration:'2:30', status:'scheduled', platforms:['tt'], color:'linear-gradient(135deg,#6affcb,#7c6aff)', emoji:'🎬' },
+  { id:4, title:'Testimonio Cliente', duration:'0:58', status:'draft', platforms:['ig','fb'], color:'linear-gradient(135deg,#ffb84d,#ff6a9f)', emoji:'⭐' },
+  { id:5, title:'Tutorial App', duration:'3:15', status:'published', platforms:['yt','li'], color:'linear-gradient(135deg,#ff4d6a,#7c6aff)', emoji:'📱' },
+  { id:6, title:'Post Motivacional', duration:'0:30', status:'published', platforms:['ig','tt','fb'], color:'linear-gradient(135deg,#6affcb,#ffb84d)', emoji:'💪' },
+];
+
+const PLATFORMS_DATA = [
+  { name:'Instagram', icon:'📸', pct:45, color:'#ff6a9f' },
+  { name:'TikTok',    icon:'🎵', pct:30, color:'#6affcb' },
+  { name:'YouTube',   icon:'▶️', pct:15, color:'#ff4d6a' },
+  { name:'Facebook',  icon:'👥', pct:10, color:'#7c6aff' },
+];
+
+const DAYS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+// ==============================
+// NAVIGATION
+// ==============================
+const pageMeta = {
+  dashboard:  { title:'Dashboard', sub:'Resumen de tu actividad en redes' },
+  upload:     { title:'Subir Videos', sub:'Arrastra o selecciona archivos para subir' },
+  library:    { title:'Biblioteca', sub:'Todos tus videos y posts' },
+  calendar:   { title:'Calendario', sub:'Vista mensual de publicaciones programadas' },
+  queue:      { title:'Cola de Posts', sub:'Publicaciones pendientes de enviar' },
+  analytics:  { title:'Métricas', sub:'Análisis detallado de rendimiento' },
+  reports:    { title:'Reportes', sub:'Informes inteligentes generados por IA' },
+  accounts:   { title:'Redes Conectadas', sub:'Gestiona tus cuentas vinculadas' },
+};
+
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll(`[onclick="navigate('${page}')"]`).forEach(el => el.classList.add('active'));
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.getElementById(`view-${page}`).classList.add('active');
+  const m = pageMeta[page];
+  document.getElementById('page-title').textContent = m.title;
+  document.getElementById('page-subtitle').textContent = m.sub;
+}
+
+// ==============================
+// RENDER FUNCTIONS
+// ==============================
+function renderVideoCard(v) {
+  const statusLabel = { published:'Publicado', scheduled:'Programado', draft:'Borrador', failed:'Error' }[v.status];
+  const platforms = v.platforms.map(p => {
+    const icons = {ig:'📸',tt:'🎵',yt:'▶️',fb:'👥',tw:'🐦',li:'💼'};
+    return `<span class="platform-dot" title="${p}" style="background:rgba(255,255,255,0.05)">${icons[p]||'🌐'}</span>`;
+  }).join('');
+  return `
+    <div class="video-card slide-in" onclick="openScheduleModal()">
+      <div class="video-thumb">
+        <div class="video-thumb-bg" style="background:${v.color}"></div>
+        <div style="position:absolute;inset:0;background:${v.color};opacity:0.6"></div>
+        <div class="play-btn">▶</div>
+        <div class="video-status status-${v.status}">${statusLabel}</div>
+        <div class="video-duration">${v.duration}</div>
+      </div>
+      <div class="video-info">
+        <div class="video-title">${v.title}</div>
+        <div class="video-meta"><span>📅 Mayo 2026</span></div>
+        <div class="video-platforms">${platforms}</div>
+      </div>
+    </div>`;
+}
+
+function renderBarChart(containerId, data) {
+  const max = Math.max(...data.map(d=>d.v));
+  document.getElementById(containerId).innerHTML = data.map(d => `
+    <div class="bar-col">
+      <div class="bar" style="height:${(d.v/max)*100}%;background:${d.color||'var(--accent)'}"></div>
+      <div class="bar-label">${d.label}</div>
+    </div>`).join('');
+}
+
+function renderPlatformsBreakdown() {
+  document.getElementById('platforms-breakdown').innerHTML = PLATFORMS_DATA.map(p => `
+    <div class="platform-row">
+      <span class="platform-row-icon">${p.icon}</span>
+      <div class="platform-bar-wrap">
+        <div class="platform-bar-fill" style="width:${p.pct}%;background:${p.color}"></div>
+      </div>
+      <span class="platform-pct" style="color:${p.color}">${p.pct}%</span>
+    </div>`).join('');
+}
+
+function renderCalendar() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // May = 4
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+
+  const calEvents = {
+    5:  [{label:'Promo', cls:'ig'}],
+    8:  [{label:'Tutorial', cls:'yt'}],
+    12: [{label:'Reel', cls:'tt'},{label:'Post', cls:'fb'}],
+    15: [{label:'Detrás', cls:'ig'}],
+    19: [{label:'Lanzamiento', cls:'ig'},{label:'Video', cls:'yt'}],
+    22: [{label:'Motiva', cls:'tt'}],
+    26: [{label:'Hoy', cls:'ig'}],
+    28: [{label:'Post', cls:'fb'}],
+    30: [{label:'Fin Mes', cls:'tt'}],
+  };
+
+  let html = DAYS.map(d=>`<div class="cal-header">${d}</div>`).join('');
+
+  for(let i=0; i<firstDay; i++) html += `<div class="cal-day other-month"><div class="cal-day-num">${new Date(year,month,0).getDate()-firstDay+i+1}</div></div>`;
+
+  for(let d=1; d<=daysInMonth; d++){
+    const isToday = d === today.getDate() && month === today.getMonth();
+    const events = calEvents[d]||[];
+    html += `<div class="cal-day${isToday?' today':''}" onclick="showToast('📅 ${d} Mayo — ${events.length} evento(s)','info')">
+      <div class="cal-day-num">${d}</div>
+      ${events.map(e=>`<div class="cal-event ${e.cls}">${e.label}</div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('calendar-grid').innerHTML = html;
+}
+
+function renderQueue() {
+  const items = [
+    { title:'Promo de Verano', time:'Hoy · 6:00 PM', platforms:['📸','🎵'], emoji:'🏖️', color:'#ff6a9f' },
+    { title:'Lanzamiento Producto', time:'Mañana · 9:00 AM', platforms:['📸','▶️','👥'], emoji:'🚀', color:'#7c6aff' },
+    { title:'Detrás de Cámaras', time:'Jue 29 · 7:00 PM', platforms:['🎵'], emoji:'🎬', color:'#6affcb' },
+    { title:'Tutorial App v2', time:'Vie 30 · 12:00 PM', platforms:['▶️','💼'], emoji:'📱', color:'#ffb84d' },
+  ];
+
+  document.getElementById('queue-list').innerHTML = items.map(item=>`
+    <div class="queue-item">
+      <div class="queue-thumb" style="background:linear-gradient(135deg,${item.color}44,${item.color}22);font-size:24px">${item.emoji}</div>
+      <div class="queue-info">
+        <div class="queue-title">${item.title}</div>
+        <div class="queue-time">⏰ ${item.time}</div>
+        <div class="queue-platforms">${item.platforms.map(p=>`<span style="font-size:16px">${p}</span>`).join('')}</div>
+      </div>
+      <div class="queue-actions">
+        <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="showToast('✏️ Abriendo editor...','info')">Editar</button>
+        <button class="btn btn-danger" style="padding:6px 10px;font-size:12px" onclick="showToast('🗑️ Post eliminado de la cola','error')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderAccounts() {
+  const accounts = [
+    { name:'@miempresa', platform:'Instagram', icon:'📸', color:'#ff6a9f', followers:'12.4K', status:'Conectado' },
+    { name:'@miempresa_co', platform:'TikTok', icon:'🎵', color:'#6affcb', followers:'8.1K', status:'Conectado' },
+    { name:'Mi Empresa Oficial', platform:'YouTube', icon:'▶️', color:'#ff4d6a', followers:'3.2K', status:'Conectado' },
+    { name:'Mi Empresa Página', platform:'Facebook', icon:'👥', color:'#7c6aff', followers:'5.7K', status:'Conectado' },
+    { name:'@miempresa', platform:'X / Twitter', icon:'🐦', color:'#6affcb', followers:'2.1K', status:'Reconectar' },
+    { name:'Mi Empresa', platform:'LinkedIn', icon:'💼', color:'#ffb84d', followers:'890', status:'Conectar' },
+  ];
+
+  document.getElementById('accounts-grid').outerHTML = `<div id="accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;width:100%">
+    ${accounts.map(a=>`
+    <div class="stat-card" style="--accent-color:${a.color}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:28px">${a.icon}</span>
+        <div>
+          <div style="font-weight:600">${a.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${a.platform}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:20px;font-weight:700;font-family:Syne,sans-serif">${a.followers}</div>
+          <div style="font-size:11px;color:var(--muted)">seguidores</div>
+        </div>
+        <button class="btn ${a.status==='Conectado'?'btn-ghost':'btn-primary'}" style="font-size:12px;padding:6px 14px"
+          onclick="showToast('${a.status==='Conectado'?'✓ Cuenta activa':'🔗 Conectando '+a.platform+'...'}','${a.status==='Conectado'?'info':'success'}')">
+          ${a.status}
+        </button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderBestTimes() {
+  const times = [
+    { label:'Lunes', time:'7:00 PM', icon:'📈' },
+    { label:'Miércoles', time:'12:00 PM', icon:'⚡' },
+    { label:'Jueves', time:'8:00 PM', icon:'🔥' },
+    { label:'Sábado', time:'10:00 AM', icon:'✨' },
+  ];
+  document.getElementById('best-times').innerHTML = times.map(t=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">
+      <div style="font-size:18px">${t.icon}</div>
+      <div style="font-size:13px;font-weight:600;margin-top:4px">${t.label}</div>
+      <div style="font-size:12px;color:var(--accent)">${t.time}</div>
+    </div>`).join('');
+}
+
+// ==============================
+// MODAL
+// ==============================
+function openScheduleModal() {
+  const now = new Date();
+  document.getElementById('modal-date').value = now.toISOString().split('T')[0];
+  document.getElementById('modal-time').value = '18:00';
+  document.getElementById('schedule-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('schedule-modal').classList.remove('open');
+}
+
+function togglePlatform(cb, id) {
+  document.getElementById(id).classList.toggle('checked', cb.checked);
+}
+
+function generateCaption() {
+  const captions = [
+    '¡Conoce nuestra nueva colección! 🚀 Diseñada para profesionales que buscan lo mejor. ¿Ya la viste? 👇 #colombia #emprendimiento #innovacion',
+    'El éxito no llega solo... ¡se construye! 💪 Hoy compartimos contigo nuestro proceso creativo. Guarda este video para inspirarte. ✨ #marketing #colombia',
+    '¿Sabías que el 80% del contenido que más convierte incluye testimonios reales? 🎯 Aquí te mostramos por qué. #digitalmarketing #ventas',
+    'Detrás de cada gran marca hay un gran equipo 🙌 Hoy te presentamos a las personas que hacen posible todo esto. #startup #colombia',
+  ];
+  document.getElementById('modal-caption').value = captions[Math.floor(Math.random()*captions.length)];
+  showToast('✨ Caption generado con IA', 'success');
+}
+
+function schedulePost() {
+  const title = document.getElementById('modal-title').value || 'Nuevo Post';
+  closeModal();
+  showToast(`📅 "${title}" programado correctamente`, 'success');
+}
+
+function saveDraft() {
+  closeModal();
+  showToast('💾 Borrador guardado', 'info');
+}
+
+// ==============================
+// FILE UPLOAD
+// ==============================
+function handleFileUpload(input) {
+  const files = Array.from(input.files);
+  if(!files.length) return;
+  document.getElementById('uploaded-preview').style.display = 'block';
+  const colors = ['linear-gradient(135deg,#7c6aff,#6affcb)','linear-gradient(135deg,#ff6a9f,#ffb84d)','linear-gradient(135deg,#6affcb,#ff4d6a)'];
+  const emojis = ['🎬','📹','🎥','📸','🎞️'];
+  document.getElementById('upload-preview-grid').innerHTML = files.map((f,i)=>{
+    const ext = f.name.split('.').pop().toUpperCase();
+    return `
+      <div class="video-card">
+        <div class="video-thumb">
+          <div style="position:absolute;inset:0;background:${colors[i%colors.length]};opacity:0.7"></div>
+          <div style="font-size:36px;position:relative;z-index:1">${emojis[i%emojis.length]}</div>
+          <div class="video-status status-draft">Listo</div>
+          <div class="video-duration">${ext}</div>
+        </div>
+        <div class="video-info">
+          <div class="video-title">${f.name}</div>
+          <div class="video-meta">${(f.size/1024/1024).toFixed(1)} MB</div>
+          <div style="margin-top:8px">
+            <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;width:100%" onclick="openScheduleModal()">+ Programar</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  showToast(`✅ ${files.length} archivo(s) cargado(s) correctamente`, 'success');
+}
+
+// Drag & drop
+const zone = document.getElementById('upload-zone');
+['dragenter','dragover'].forEach(e=>zone.addEventListener(e,ev=>{ev.preventDefault();zone.classList.add('drag-over')}));
+['dragleave','drop'].forEach(e=>zone.addEventListener(e,ev=>{ev.preventDefault();zone.classList.remove('drag-over')}));
+zone.addEventListener('drop',ev=>{
+  const files = ev.dataTransfer.files;
+  if(files.length) {
+    document.getElementById('upload-preview-grid').innerHTML='';
+    handleFileUpload({files});
+  }
+});
+
+// ==============================
+// LIBRARY FILTER
+// ==============================
+function filterLib(filter, tabEl) {
+  document.querySelectorAll('#view-library .tab').forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+  const filtered = filter==='all' ? VIDEOS : VIDEOS.filter(v=>v.status===filter);
+  document.getElementById('library-grid').innerHTML = filtered.length
+    ? filtered.map(renderVideoCard).join('')
+    : `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">No hay videos en esta categoría</div>`;
+}
+
+// ==============================
+// TOAST
+// ==============================
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  document.getElementById('toast-icon').textContent = icons[type]||'✓';
+  document.getElementById('toast-text').textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(()=>{ t.className='toast'; }, 3000);
+}
+
+// Close modal on backdrop click
+document.getElementById('schedule-modal').addEventListener('click', function(e){
+  if(e.target===this) closeModal();
+});
+
+// ==============================
+// AI REPORT
+// ==============================
+const reportText = `📊 Este mes alcanzaste 84,200 personas en todas tus redes, un incremento del 23% frente al mes anterior. Tu mejor contenido fue el video "Promo Verano" en Instagram, con 12,400 impresiones y 6.8% de engagement rate. 
+
+📅 El horario más efectivo es entre las 6-8 PM los lunes y jueves. TikTok está creciendo un 41% mes a mes — considera aumentar la frecuencia en esta plataforma. 
+
+💡 Recomendación IA: Publica al menos 4 Reels cortos (< 30s) por semana para maximizar el alcance orgánico en Instagram. Usa hashtags en español colombiano para conectar mejor con tu audiencia local.`;
+
+// ==============================
+// INIT
+// ==============================
+function init() {
+  // Recent videos
+  document.getElementById('recent-videos').innerHTML = VIDEOS.slice(0,4).map(renderVideoCard).join('');
+
+  // Bar chart dashboard
+  const weekData = [
+    {label:'L', v:3, color:'#7c6aff'},{label:'M', v:1, color:'#ff6a9f'},
+    {label:'X', v:4, color:'#7c6aff'},{label:'J', v:2, color:'#ff6a9f'},
+    {label:'V', v:5, color:'#6affcb'},{label:'S', v:3, color:'#ffb84d'},{label:'D', v:1, color:'#7c6aff'},
+  ];
+  renderBarChart('bar-chart', weekData);
+  renderPlatformsBreakdown();
+  renderCalendar();
+  renderQueue();
+  renderAccounts();
+  renderBestTimes();
+
+  // Analytics chart
+  const analyticsData = Array.from({length:14}, (_,i)=>({
+    label: i%7===0?'S1':i%7===3?'S2':i%7===6?'S3':i%7===10?'S4':'',
+    v: Math.floor(Math.random()*80+20),
+    color: ['#7c6aff','#ff6a9f','#6affcb','#ffb84d','#ff4d6a'][i%5]
+  }));
+  renderBarChart('analytics-chart', analyticsData);
+
+  // Library
+  document.getElementById('library-grid').innerHTML = VIDEOS.map(renderVideoCard).join('');
+
+  // AI Report typewriter
+  let i=0;
+  const el = document.getElementById('ai-report');
+  el.textContent='';
+  const type = ()=>{ if(i<reportText.length){ el.textContent+=reportText[i++]; setTimeout(type,18); } };
+  setTimeout(type, 800);
+
+  // Platform bars animation
+  setTimeout(()=>{
+    document.querySelectorAll('.platform-bar-fill').forEach(b=>{
+      b.style.width = b.style.width; // trigger repaint
+    });
+  }, 100);
+}
+
+init();
+// === CONEXIÓN CON BACKEND ===
+const API = 'http://localhost:3000';
+
+async function cargarPosts() {
+  try {
+    const res = await fetch(`${API}/posts`);
+    const posts = await res.json();
+    console.log('Posts cargados:', posts);
+  } catch(e) {
+    console.log('Backend no disponible, modo demo');
+  }
+}
+
+async function guardarPost(datos) {
+  try {
+    const res = await fetch(`${API}/posts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+    return await res.json();
+  } catch(e) {
+    console.log('Error guardando post');
+  }
+}
+
+// Sobreescribir función de programar
+async function schedulePost() {
+  const titulo = document.getElementById('modal-title').value || 'Nuevo Post';
+  const caption = document.getElementById('modal-caption').value;
+  const hashtags = document.getElementById('modal-hashtags').value;
+  const fecha = document.getElementById('modal-date').value;
+  const hora = document.getElementById('modal-time').value;
+
+  const plataformas = [];
+  document.querySelectorAll('.platform-toggle.checked').forEach(p => {
+    plataformas.push(p.id.replace('pt-', ''));
+  });
+
+  await guardarPost({ titulo, caption, hashtags, fecha, hora, plataformas });
+  closeModal();
+  showToast(`📅 "${titulo}" programado correctamente`, 'success');
+}
+
+cargarPosts();
+</script>
+</body>
+</html>
