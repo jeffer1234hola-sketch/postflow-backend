@@ -22,29 +22,56 @@ const Post = mongoose.model('Post', PostSchema);
 
 // === RUTAS ===
 
-// Obtener todos los posts
 app.get('/posts', async (req, res) => {
   const posts = await Post.find().sort({ creadoEn: -1 });
   res.json(posts);
 });
 
-// Crear un post
 app.post('/posts', async (req, res) => {
   const post = new Post(req.body);
   await post.save();
   res.json({ ok: true, post });
 });
 
-// Eliminar un post
 app.delete('/posts/:id', async (req, res) => {
   await Post.findByIdAndDelete(req.params.id);
   res.json({ ok: true });
 });
 
-// Actualizar estado de un post
 app.patch('/posts/:id', async (req, res) => {
   const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json({ ok: true, post });
+});
+
+// === GENERAR CAPTION CON IA ===
+app.post('/generar-caption', async (req, res) => {
+  const { tema, plataforma, tono } = req.body;
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama3-8b-8192',
+        messages: [{
+          role: 'user',
+          content: `Eres un experto en marketing digital para redes sociales en Colombia. 
+Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${tema}".
+Tono: ${tono || 'profesional y cercano'}.
+Incluye emojis relevantes y máximo 3 hashtags al final.
+Responde SOLO con el caption, sin explicaciones.`
+        }],
+        max_tokens: 300
+      })
+    });
+    const data = await response.json();
+    const caption = data.choices[0].message.content;
+    res.json({ ok: true, caption });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 app.get('/', (req, res) => {
@@ -58,4 +85,3 @@ mongoose.connect(process.env.MONGO_URI)
     app.listen(process.env.PORT || 3000, () => console.log('Servidor en puerto 3000'));
   })
   .catch(err => console.error('Error DB:', err));
-
