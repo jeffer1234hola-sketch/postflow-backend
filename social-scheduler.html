@@ -910,7 +910,7 @@ function renderVideoCard(v) {
   }).join('');
   return `
     <div class="video-card slide-in" onclick="openScheduleModal()">
-      <div class="video-thumb">
+      <div class="video-thumb">${v.mediaUrl ? `<img src="${v.mediaUrl}" alt="${v.titulo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:inherit;z-index:1;">` : ""}
         <div class="video-thumb-bg" style="background:${v.color}"></div>
         <div style="position:absolute;inset:0;background:${v.color};opacity:0.6"></div>
         <div class="play-btn">▶</div>
