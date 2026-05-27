@@ -45,34 +45,4 @@ app.post('/generar-caption', async (req, res) => {
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        messages: [{
-          role: 'user',
-          content: `Eres un experto en marketing digital para redes sociales en Colombia. Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${tema}". Tono: ${tono || 'profesional y cercano'}. Incluye emojis relevantes y máximo 3 hashtags al final. Responde SOLO con el caption, sin explicaciones.`
-        }],
-        max_tokens: 300
-      })
-    });
-    const data = await response.json();
-    const caption = data.choices[0].message.content;
-    res.json({ ok: true, caption });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-app.get('/', (req, res) => {
-  res.json({ mensaje: 'PostFlow API funcionando ✅' });
-});
-
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('Base de datos lista');
-    app.listen(process.env.PORT || 3000, () => console.log('Servidor en puerto 3000'));
-  })
-  .catch(err => console.error('Error DB:', err));
+      headers
