@@ -50,7 +50,7 @@ app.post('/generar-caption', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model:'mixtral-8x7b-32768',
+        model:'llama-3.1-8b-instant',
         messages: [{
           role: 'user',
           content: `Eres un experto en marketing digital para redes sociales en Colombia. Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${tema}". Tono: ${tono || 'profesional y cercano'}. Incluye emojis relevantes y maximo 3 hashtags al final. Responde SOLO con el caption, sin explicaciones.`
