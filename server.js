@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'postflow_secret_2026';
+const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/2wpe45g4j9po6d2896ef75tw6mxlqs70';
 
 // ── ImageKit ──────────────────────────────────────────────────
 const imagekit = new ImageKit({
@@ -66,13 +67,40 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Auth opcional — no bloquea pero agrega req.user si hay token
 const authOptional = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (token) {
     try { req.user = jwt.verify(token, JWT_SECRET); } catch {}
   }
   next();
+};
+
+// ── Helper: Notificar a Make ──────────────────────────────────
+const notificarMake = async (post) => {
+  try {
+    const payload = {
+      postId: post._id,
+      titulo: post.titulo,
+      caption: post.caption,
+      hashtags: post.hashtags,
+      plataformas: post.plataformas,
+      mediaUrl: post.mediaUrl,
+      mediaTipo: post.mediaTipo,
+      fecha: post.fecha,
+      hora: post.hora,
+      fechaPublicacion: post.fechaPublicacion,
+      estado: post.estado,
+      userId: post.userId
+    };
+    const resp = await fetch(MAKE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    console.log('Make webhook enviado — status:', resp.status);
+  } catch (err) {
+    console.warn('Make webhook error:', err.message);
+  }
 };
 
 // ── Auth endpoints ────────────────────────────────────────────
@@ -115,16 +143,26 @@ app.get('/auth/me', authMiddleware, async (req, res) => {
   res.json({ ok: true, user });
 });
 
-// ── Posts — filtrados por usuario ─────────────────────────────
+// ── Posts ─────────────────────────────────────────────────────
 app.get('/posts', authMiddleware, async (req, res) => {
   const posts = await Post.find({ userId: req.user.id }).sort({ creadoEn: -1 });
   res.json(posts);
 });
 
 app.post('/posts', authMiddleware, async (req, res) => {
-  const post = new Post({ ...req.body, userId: req.user.id });
-  await post.save();
-  res.json({ ok: true, ...post.toObject() });
+  try {
+    const post = new Post({ ...req.body, userId: req.user.id });
+    await post.save();
+
+    // Notificar a Make solo si el post es programado y tiene fecha
+    if (post.estado === 'programado' && (post.fechaPublicacion || post.fecha)) {
+      await notificarMake(post);
+    }
+
+    res.json({ ok: true, ...post.toObject() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.delete('/posts/:id', authMiddleware, async (req, res) => {
@@ -142,13 +180,23 @@ app.delete('/posts/:id', authMiddleware, async (req, res) => {
 });
 
 app.patch('/posts/:id', authMiddleware, async (req, res) => {
-  const post = await Post.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user.id },
-    req.body,
-    { new: true }
-  );
-  if (!post) return res.status(404).json({ error: 'Post no encontrado' });
-  res.json({ ok: true, ...post.toObject() });
+  try {
+    const post = await Post.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      req.body,
+      { new: true }
+    );
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+
+    // Re-notificar a Make si se actualiza el estado a programado
+    if (req.body.estado === 'programado') {
+      await notificarMake(post);
+    }
+
+    res.json({ ok: true, ...post.toObject() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Upload ────────────────────────────────────────────────────
@@ -198,7 +246,7 @@ app.post('/generar-caption', authMiddleware, async (req, res) => {
 });
 
 // ── Health ────────────────────────────────────────────────────
-app.get('/', (req, res) => res.json({ mensaje: 'PostFlow API v2.1', status: 'ok' }));
+app.get('/', (req, res) => res.json({ mensaje: 'PostFlow API v2.2 — Make.com integrado', status: 'ok' }));
 
 // ── Start ─────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
