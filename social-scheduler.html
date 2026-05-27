@@ -780,7 +780,8 @@
       <div class="form-group">
         <label class="form-label">Caption / Descripción</label>
         <textarea class="form-textarea" id="modal-caption" placeholder="Escribe tu caption aquí o usa IA para generarlo..."></textarea>
-        <button class="btn btn-ghost" style="margin-top:8px;font-size:12px" onclick="generateCaption()">✨ Generar Caption con IA</button>
+        <button class="btn btn-ghost" style="margin-top:8px;font-size:12px" onclick="generateCaption()">✨ Generar Caption con IA</button><button onclick="copiarCaption()" style="background:transparent;border:1px solid #555;color:#aaa;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:8px;">📋 Copiar</button>
+
       </div>
       <div class="form-group">
         <label class="form-label">Redes sociales</label>
@@ -1058,7 +1059,12 @@ function closeModal() {
 function togglePlatform(cb, id) {
   document.getElementById(id).classList.toggle('checked', cb.checked);
 }
-
+function copiarCaption() {
+  const caption = document.getElementById('modal-caption').value;
+  if (!caption) { showToast('No hay caption para copiar', 'error'); return; }
+  navigator.clipboard.writeText(caption);
+  showToast('📋 Caption copiado al portapapeles', 'success');
+}
 async function generateCaption() {
   const titulo = document.getElementById('modal-title').value;
   const plataformas = [...document.querySelectorAll('.platform-toggle.checked')].map(el => el.dataset.platform);
