@@ -6,7 +6,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// === MODELO DE POST ===
 const PostSchema = new mongoose.Schema({
   titulo: String,
   caption: String,
@@ -19,8 +18,6 @@ const PostSchema = new mongoose.Schema({
 });
 
 const Post = mongoose.model('Post', PostSchema);
-
-// === RUTAS ===
 
 app.get('/posts', async (req, res) => {
   const posts = await Post.find().sort({ creadoEn: -1 });
@@ -43,7 +40,6 @@ app.patch('/posts/:id', async (req, res) => {
   res.json({ ok: true, post });
 });
 
-// === GENERAR CAPTION CON IA ===
 app.post('/generar-caption', async (req, res) => {
   const { tema, plataforma, tono } = req.body;
   try {
@@ -57,11 +53,7 @@ app.post('/generar-caption', async (req, res) => {
         model: 'llama3-8b-8192',
         messages: [{
           role: 'user',
-          content: `Eres un experto en marketing digital para redes sociales en Colombia. 
-Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${tema}".
-Tono: ${tono || 'profesional y cercano'}.
-Incluye emojis relevantes y máximo 3 hashtags al final.
-Responde SOLO con el caption, sin explicaciones.`
+          content: `Eres un experto en marketing digital para redes sociales en Colombia. Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${tema}". Tono: ${tono || 'profesional y cercano'}. Incluye emojis relevantes y máximo 3 hashtags al final. Responde SOLO con el caption, sin explicaciones.`
         }],
         max_tokens: 300
       })
@@ -78,7 +70,6 @@ app.get('/', (req, res) => {
   res.json({ mensaje: 'PostFlow API funcionando ✅' });
 });
 
-// === INICIAR SERVIDOR ===
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Base de datos lista');
