@@ -3,16 +3,20 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const ImageKit = require('imagekit');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ── ImageKit config ──────────────────────────────────────────
+const JWT_SECRET = process.env.JWT_SECRET || 'postflow_secret_2026';
+
+// ── ImageKit ─────────────────────────────────────────────────
 const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || 'public_oGWQkSvP5WDYk2Oq',
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || 'private_zDSeY0OKGeNafh5',
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/postflowjj'
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
 
 const upload = multer({
@@ -20,15 +24,19 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/avi'];
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Tipo de archivo no permitido'), false);
-    }
+    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Tipo no permitido'), false);
   }
 });
 
-// ── Schema ───────────────────────────────────────────────────
+// ── Schemas ──────────────────────────────────────────────────
+const UserSchema = new mongoose.Schema({
+  nombre: { type: String, required: true },
+  email: { type: String, required: true, unique: true, lowercase: true },
+  password: { type: String, required: true },
+  creadoEn: { type: Date, default: Date.now }
+});
+const User = mongoose.model('User', UserSchema);
+
 const PostSchema = new mongoose.Schema({
   titulo: String,
   caption: String,
@@ -36,16 +44,68 @@ const PostSchema = new mongoose.Schema({
   plataformas: [String],
   fecha: String,
   hora: String,
+  fechaPublicacion: Date,
   estado: { type: String, default: 'programado' },
   mediaUrl: { type: String, default: null },
   mediaFileId: { type: String, default: null },
   mediaTipo: { type: String, default: null },
   creadoEn: { type: Date, default: Date.now }
 });
-
 const Post = mongoose.model('Post', PostSchema);
 
-// ── Endpoints posts ──────────────────────────────────────────
+// ── Middleware Auth ───────────────────────────────────────────
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token requerido' });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Token inválido' });
+  }
+};
+
+// ── Auth endpoints ────────────────────────────────────────────
+app.post('/auth/register', async (req, res) => {
+  try {
+    const { nombre, email, password } = req.body;
+    if (!nombre || !email || !password)
+      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    if (password.length < 6)
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    const existe = await User.findOne({ email });
+    if (existe) return res.status(400).json({ error: 'El email ya está registrado' });
+    const hash = await bcrypt.hash(password, 12);
+    const user = await User.create({ nombre, email, password: hash });
+    const token = jwt.sign({ id: user._id, email: user.email, nombre: user.nombre }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ ok: true, token, user: { id: user._id, nombre: user.nombre, email: user.email } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ error: 'Email y contraseña requeridos' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ error: 'Credenciales incorrectas' });
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(401).json({ error: 'Credenciales incorrectas' });
+    const token = jwt.sign({ id: user._id, email: user.email, nombre: user.nombre }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ ok: true, token, user: { id: user._id, nombre: user.nombre, email: user.email } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/auth/me', authMiddleware, async (req, res) => {
+  const user = await User.findById(req.user.id).select('-password');
+  res.json({ ok: true, user });
+});
+
+// ── Posts endpoints ───────────────────────────────────────────
 app.get('/posts', async (req, res) => {
   const posts = await Post.find().sort({ creadoEn: -1 });
   res.json(posts);
@@ -54,7 +114,7 @@ app.get('/posts', async (req, res) => {
 app.post('/posts', async (req, res) => {
   const post = new Post(req.body);
   await post.save();
-  res.json({ ok: true, post });
+  res.json({ ok: true, ...post.toObject() });
 });
 
 app.delete('/posts/:id', async (req, res) => {
@@ -64,42 +124,31 @@ app.delete('/posts/:id', async (req, res) => {
 
 app.patch('/posts/:id', async (req, res) => {
   const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json({ ok: true, post });
+  res.json({ ok: true, ...post.toObject() });
 });
 
-// ── Endpoint subida de archivos ──────────────────────────────
+// ── Upload ────────────────────────────────────────────────────
 app.post('/upload', upload.single('archivo'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No se recibió ningún archivo' });
-    }
-
+    if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo' });
     const fileName = `postflow_${Date.now()}_${req.file.originalname.replace(/\s/g, '_')}`;
-
     const resultado = await imagekit.upload({
       file: req.file.buffer,
-      fileName: fileName,
+      fileName,
       folder: '/postflow-media',
       useUniqueFileName: true,
     });
-
-    res.json({
-      url: resultado.url,
-      fileId: resultado.fileId,
-      nombre: resultado.name,
-      tipo: req.file.mimetype,
-      tamaño: req.file.size
-    });
-
+    res.json({ url: resultado.url, fileId: resultado.fileId, nombre: resultado.name, tipo: req.file.mimetype });
   } catch (error) {
-    console.error('Error al subir archivo:', error);
-    res.status(500).json({ error: 'Error al subir el archivo: ' + error.message });
+    console.error('Error upload:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// ── Endpoint generar caption ─────────────────────────────────
+// ── Generar caption ───────────────────────────────────────────
 app.post('/generar-caption', async (req, res) => {
-  const { tema, plataforma, tono } = req.body;
+  const { tema, prompt, plataforma, tono } = req.body;
+  const topico = prompt || tema || 'contenido general';
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -111,28 +160,23 @@ app.post('/generar-caption', async (req, res) => {
         model: 'llama-3.1-8b-instant',
         messages: [{
           role: 'user',
-          content: `Eres un experto en marketing digital para redes sociales en Colombia. Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${tema}". Tono: ${tono || 'profesional y cercano'}. Incluye emojis relevantes y maximo 3 hashtags al final. Responde SOLO con el caption, sin explicaciones.`
+          content: `Eres un experto en marketing digital para redes sociales en Colombia. Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${topico}". Tono: ${tono || 'profesional y cercano'}. Incluye emojis relevantes y máximo 3 hashtags al final. Responde SOLO con el caption, sin explicaciones adicionales.`
         }],
         max_tokens: 300
       })
     });
     const data = await response.json();
-    if (!data.choices) {
-      return res.status(500).json({ ok: false, error: JSON.stringify(data) });
-    }
-    const caption = data.choices[0].message.content;
-    res.json({ ok: true, caption });
+    if (!data.choices) return res.status(500).json({ ok: false, error: JSON.stringify(data) });
+    res.json({ ok: true, caption: data.choices[0].message.content });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-// ── Health check ─────────────────────────────────────────────
-app.get('/', (req, res) => {
-  res.json({ mensaje: 'PostFlow API funcionando' });
-});
+// ── Health ────────────────────────────────────────────────────
+app.get('/', (req, res) => res.json({ mensaje: 'PostFlow API funcionando', version: '2.0' }));
 
-// ── Arranque ─────────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Base de datos lista');
