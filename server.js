@@ -38,6 +38,7 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 const PostSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
   titulo: String,
   caption: String,
   hashtags: String,
@@ -65,7 +66,16 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// ── Auth ──────────────────────────────────────────────────────
+// Auth opcional — no bloquea pero agrega req.user si hay token
+const authOptional = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    try { req.user = jwt.verify(token, JWT_SECRET); } catch {}
+  }
+  next();
+};
+
+// ── Auth endpoints ────────────────────────────────────────────
 app.post('/auth/register', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
@@ -105,30 +115,24 @@ app.get('/auth/me', authMiddleware, async (req, res) => {
   res.json({ ok: true, user });
 });
 
-// ── Posts ─────────────────────────────────────────────────────
-app.get('/posts', async (req, res) => {
-  const posts = await Post.find().sort({ creadoEn: -1 });
+// ── Posts — filtrados por usuario ─────────────────────────────
+app.get('/posts', authMiddleware, async (req, res) => {
+  const posts = await Post.find({ userId: req.user.id }).sort({ creadoEn: -1 });
   res.json(posts);
 });
 
-app.post('/posts', async (req, res) => {
-  const post = new Post(req.body);
+app.post('/posts', authMiddleware, async (req, res) => {
+  const post = new Post({ ...req.body, userId: req.user.id });
   await post.save();
   res.json({ ok: true, ...post.toObject() });
 });
 
-app.delete('/posts/:id', async (req, res) => {
+app.delete('/posts/:id', authMiddleware, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findOne({ _id: req.params.id, userId: req.user.id });
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
-    // Eliminar media de ImageKit si existe
     if (post.mediaFileId) {
-      try {
-        await imagekit.deleteFile(post.mediaFileId);
-        console.log('Media eliminada de ImageKit:', post.mediaFileId);
-      } catch (ikErr) {
-        console.warn('No se pudo eliminar de ImageKit:', ikErr.message);
-      }
+      try { await imagekit.deleteFile(post.mediaFileId); } catch (e) { console.warn('ImageKit delete:', e.message); }
     }
     await Post.findByIdAndDelete(req.params.id);
     res.json({ ok: true });
@@ -137,13 +141,18 @@ app.delete('/posts/:id', async (req, res) => {
   }
 });
 
-app.patch('/posts/:id', async (req, res) => {
-  const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
+app.patch('/posts/:id', authMiddleware, async (req, res) => {
+  const post = await Post.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user.id },
+    req.body,
+    { new: true }
+  );
+  if (!post) return res.status(404).json({ error: 'Post no encontrado' });
   res.json({ ok: true, ...post.toObject() });
 });
 
 // ── Upload ────────────────────────────────────────────────────
-app.post('/upload', upload.single('archivo'), async (req, res) => {
+app.post('/upload', authMiddleware, upload.single('archivo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo' });
     const fileName = `postflow_${Date.now()}_${req.file.originalname.replace(/\s/g, '_')}`;
@@ -161,7 +170,7 @@ app.post('/upload', upload.single('archivo'), async (req, res) => {
 });
 
 // ── Caption IA ────────────────────────────────────────────────
-app.post('/generar-caption', async (req, res) => {
+app.post('/generar-caption', authMiddleware, async (req, res) => {
   const { tema, prompt, plataforma, tono } = req.body;
   const topico = prompt || tema || 'contenido general';
   try {
@@ -189,7 +198,7 @@ app.post('/generar-caption', async (req, res) => {
 });
 
 // ── Health ────────────────────────────────────────────────────
-app.get('/', (req, res) => res.json({ mensaje: 'PostFlow API v2.0', status: 'ok' }));
+app.get('/', (req, res) => res.json({ mensaje: 'PostFlow API v2.1', status: 'ok' }));
 
 // ── Start ─────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
