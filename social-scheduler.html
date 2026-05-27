@@ -113,8 +113,6 @@
 
   /* === MAIN === */
   .main {
-  overflow-y: auto;
-  height: 100vh;
     flex: 1;
     overflow-y: auto;
     display: flex;
@@ -783,20 +781,9 @@
         <label class="form-label">Caption / Descripción</label>
         <textarea class="form-textarea" id="modal-caption" placeholder="Escribe tu caption aquí o usa IA para generarlo..."></textarea>
         <button class="btn btn-ghost" style="margin-top:8px;font-size:12px" onclick="generateCaption()">✨ Generar Caption con IA</button><button onclick="copiarCaption()" style="background:transparent;border:1px solid #555;color:#aaa;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:8px;">📋 Copiar</button>
-
-      </div>
-      <div class="form-group">
-        <div class="form-group" style="margin-bottom:20px;">
-  <label class="form-label">Imagen / Video</label>
-  <div id="uploadZone" onclick="document.getElementById('archivoInput').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)" style="border:2px dashed rgba(255,255,255,0.15);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.03);">
-    <div id="uploadPlaceholder"><div style="font-size:32px;">imagen</div><p style="color:#6b6b80;font-size:14px;">Arrastra un archivo o haz click para seleccionar</p><p style="color:#4a4a5a;font-size:12px;">JPG, PNG, GIF, WEBP, MP4 - Max. 50MB</p></div>
-    <div id="uploadPreview" style="display:none;"><img id="previewImg" src="" alt="Preview" style="max-width:100%;max-height:180px;border-radius:8px;object-fit:contain;"/><video id="previewVideo" src="" controls style="max-width:100%;max-height:180px;border-radius:8px;display:none;"></video><p id="previewNombre" style="margin:8px 0 0;font-size:12px;color:#a0a0b0;"></p></div>
-    <div id="uploadProgress" style="display:none;margin-top:12px;"><div style="background:rgba(255,255,255,0.1);border-radius:99px;height:4px;overflow:hidden;"><div id="progressBar" style="height:100%;background:linear-gradient(90deg,#a78bfa,#60a5fa);width:0%;transition:width 0.3s;border-radius:99px;"></div></div><p id="progressText" style="margin:6px 0 0;font-size:12px;color:#a0a0b0;">Subiendo...</p></div>
-  </div>
-  <input type="file" id="archivoInput" accept="image/*,video/*" style="display:none;" onchange="subirArchivo(this.files[0])"/>
-  <button type="button" id="btnQuitarMedia" onclick="quitarMedia()" style="display:none;margin-top:8px;background:none;border:none;color:#ef4444;font-size:12px;cursor:pointer;">X Quitar archivo</button>
-</div>
-<label class="form-label">Redes sociales</label>
+          </div>
+}      <div class="form-group">
+        <label class="form-label">Redes sociales</label>
         <div class="platforms-grid">
           <label class="platform-toggle" id="pt-ig">
             <input type="checkbox" onchange="togglePlatform(this,'pt-ig')">
@@ -912,7 +899,7 @@ function renderVideoCard(v) {
   }).join('');
   return `
     <div class="video-card slide-in" onclick="openScheduleModal()">
-      <div class="video-thumb">${v.mediaUrl ? `<img src="${v.mediaUrl}" alt="${v.titulo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:inherit;z-index:1;">` : ""}
+      <div class="video-thumb">
         <div class="video-thumb-bg" style="background:${v.color}"></div>
         <div style="position:absolute;inset:0;background:${v.color};opacity:0.6"></div>
         <div class="play-btn">▶</div>
@@ -1253,53 +1240,10 @@ async function cargarPosts() {
   try {
     const res = await fetch(`${API}/posts`);
     const posts = await res.json();
-    renderizarPostsReales(posts);
+    console.log('Posts cargados:', posts);
   } catch(e) {
     console.log('Backend no disponible, modo demo');
   }
-}
-
-function renderizarPostsReales(posts) {
-  // Buscar contenedor de recientes en el dashboard
-  const contenedor = document.querySelector('.videos-grid') || document.querySelector('[class*="video-grid"]') || document.querySelector('[class*="grid"]');
-  
-  // Actualizar contador Cola de Posts
-  const colaBadge = document.querySelector('.nav-badge');
-  if (colaBadge) colaBadge.textContent = posts.length;
-
-  if (!contenedor) return;
-  if (posts.length === 0) return;
-
-  // Renderizar solo los primeros 8 posts reales al inicio
-  const postsHtml = posts.slice(0, 8).map(p => {
-    const estadoLabel = { programado: 'Programado', publicado: 'Publicado', borrador: 'Borrador' }[p.estado] || p.estado;
-    const estadoClass = p.estado || 'programado';
-    const plataformas = (p.plataformas || []).map(pl => {
-      const icons = { ig: '📷', tt: '🎵', yt: '▶️', fb: '👥', tw: '🐦', li: '💼' };
-      return `<span class="platform-dot" title="${pl}" style="font-size:12px;">${icons[pl] || pl}</span>`;
-    }).join('');
-
-    const imgHtml = p.mediaUrl 
-      ? `<img src="${p.mediaUrl}" alt="${p.titulo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:inherit;z-index:1;">`
-      : '';
-
-    return `
-      <div class="video-card slide-in" style="cursor:pointer;">
-        <div class="video-thumb">
-          <div class="video-thumb-bg" style="background:${p.color || '#6c5ce7'}"></div>
-          ${imgHtml}
-          <div class="video-status status-${estadoClass}">${estadoLabel}</div>
-        </div>
-        <div class="video-info">
-          <div class="video-title">${p.titulo || 'Sin título'}</div>
-          <div class="video-meta">${p.fecha || ''} ${p.hora || ''}</div>
-          <div style="margin-top:6px;">${plataformas}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  contenedor.innerHTML = postsHtml;
 }
 
 async function guardarPost(datos) {
@@ -1328,83 +1272,12 @@ async function schedulePost() {
     plataformas.push(p.id.replace('pt-', ''));
   });
 
-  await guardarPost({ mediaUrl: mediaSubidaUrl, mediaFileId: mediaSubidaFileId, titulo, caption, hashtags, fecha, hora, plataformas });
+  await guardarPost({ titulo, caption, hashtags, fecha, hora, plataformas });
   closeModal();
   showToast(`📅 "${titulo}" programado correctamente`, 'success');
 }
 
 cargarPosts();
-
-let mediaSubidaUrl = null;
-let mediaSubidaFileId = null;
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('uploadZone').classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) subirArchivo(file);
-}
-
-async function subirArchivo(file) {
-  if (!file) return;
-  if (file.size > 50 * 1024 * 1024) { showToast('Archivo supera 50MB', 'error'); return; }
-  const previewImg = document.getElementById('previewImg');
-  const previewVideo = document.getElementById('previewVideo');
-  document.getElementById('uploadPlaceholder').style.display = 'none';
-  document.getElementById('uploadPreview').style.display = 'block';
-  document.getElementById('previewNombre').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(2) + ' MB)';
-  if (file.type.startsWith('image/')) {
-    previewImg.src = URL.createObjectURL(file);
-    previewImg.style.display = 'block';
-    previewVideo.style.display = 'none';
-  } else {
-    previewVideo.src = URL.createObjectURL(file);
-    previewVideo.style.display = 'block';
-    previewImg.style.display = 'none';
-  }
-  const uploadProgress = document.getElementById('uploadProgress');
-  const progressBar = document.getElementById('progressBar');
-  const progressText = document.getElementById('progressText');
-  uploadProgress.style.display = 'block';
-  let p = 0;
-  const iv = setInterval(() => {
-    if (p < 85) { p += Math.random() * 15; progressBar.style.width = Math.min(p, 85) + '%'; }
-  }, 300);
-  try {
-    const fd = new FormData();
-    fd.append('archivo', file);
-    const r = await fetch('https://postflow-backend-production-983c.up.railway.app/upload', { method: 'POST', body: fd });
-    clearInterval(iv);
-    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Error al subir'); }
-    const data = await r.json();
-    mediaSubidaUrl = data.url;
-    mediaSubidaFileId = data.fileId;
-    progressBar.style.width = '100%';
-    progressText.textContent = 'Subido correctamente';
-    progressText.style.color = '#4ade80';
-    setTimeout(() => { uploadProgress.style.display = 'none'; }, 2000);
-    document.getElementById('btnQuitarMedia').style.display = 'inline-block';
-    showToast('Archivo subido correctamente');
-  } catch(err) {
-    clearInterval(iv);
-    progressText.textContent = 'Error: ' + err.message;
-    progressText.style.color = '#ef4444';
-    showToast('Error al subir archivo', 'error');
-  }
-}
-
-function quitarMedia() {
-  mediaSubidaUrl = null;
-  mediaSubidaFileId = null;
-  document.getElementById('archivoInput').value = '';
-  document.getElementById('uploadPreview').style.display = 'none';
-  document.getElementById('uploadPlaceholder').style.display = 'block';
-  document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('btnQuitarMedia').style.display = 'none';
-  document.getElementById('progressBar').style.width = '0%';
-  document.getElementById('progressBar').style.background = 'linear-gradient(90deg,#a78bfa,#60a5fa)';
-}
-
 </script>
 </body>
 </html>
