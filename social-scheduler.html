@@ -1059,17 +1059,36 @@ function togglePlatform(cb, id) {
   document.getElementById(id).classList.toggle('checked', cb.checked);
 }
 
-function generateCaption() {
-  const captions = [
-    '¡Conoce nuestra nueva colección! 🚀 Diseñada para profesionales que buscan lo mejor. ¿Ya la viste? 👇 #colombia #emprendimiento #innovacion',
-    'El éxito no llega solo... ¡se construye! 💪 Hoy compartimos contigo nuestro proceso creativo. Guarda este video para inspirarte. ✨ #marketing #colombia',
-    '¿Sabías que el 80% del contenido que más convierte incluye testimonios reales? 🎯 Aquí te mostramos por qué. #digitalmarketing #ventas',
-    'Detrás de cada gran marca hay un gran equipo 🙌 Hoy te presentamos a las personas que hacen posible todo esto. #startup #colombia',
-  ];
-  document.getElementById('modal-caption').value = captions[Math.floor(Math.random()*captions.length)];
-  showToast('✨ Caption generado con IA', 'success');
-}
+async function generateCaption() {
+  const titulo = document.getElementById('modal-title').value;
+  const plataformas = [...document.querySelectorAll('.platform-toggle.checked')].map(el => el.dataset.platform);
+  const plataforma = plataformas[0] || 'Instagram';
+  
+  if (!titulo) {
+    showToast('✏️ Escribe un título primero', 'error');
+    return;
+  }
 
+  const btn = document.querySelector('[onclick="generateCaption()"]');
+  btn.textContent = '⏳ Generando...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/generar-caption`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tema: titulo, plataforma })
+    });
+    const data = await res.json();
+    document.getElementById('modal-caption').value = data.caption;
+    showToast('✨ Caption generado con IA', 'success');
+  } catch (e) {
+    showToast('❌ Error generando caption', 'error');
+  } finally {
+    btn.textContent = '✨ Generar Caption con IA';
+    btn.disabled = false;
+  }
+}
 function schedulePost() {
   const title = document.getElementById('modal-title').value || 'Nuevo Post';
   closeModal();
