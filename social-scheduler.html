@@ -1328,7 +1328,7 @@ async function schedulePost() {
     plataformas.push(p.id.replace('pt-', ''));
   });
 
-  await guardarPost({ titulo, caption, hashtags, fecha, hora, plataformas });
+  await guardarPost({ mediaUrl: mediaSubidaUrl, mediaFileId: mediaSubidaFileId, titulo, caption, hashtags, fecha, hora, plataformas });
   closeModal();
   showToast(`📅 "${titulo}" programado correctamente`, 'success');
 }
