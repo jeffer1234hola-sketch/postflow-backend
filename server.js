@@ -12,7 +12,7 @@ app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'postflow_secret_2026';
 
-// ── ImageKit ─────────────────────────────────────────────────
+// ── ImageKit ──────────────────────────────────────────────────
 const imagekit = new ImageKit({
   publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
@@ -23,12 +23,12 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/avi'];
+    const allowed = ['image/jpeg','image/png','image/gif','image/webp','video/mp4','video/quicktime','video/avi'];
     allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Tipo no permitido'), false);
   }
 });
 
-// ── Schemas ──────────────────────────────────────────────────
+// ── Schemas ───────────────────────────────────────────────────
 const UserSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
@@ -65,7 +65,7 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// ── Auth endpoints ────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────
 app.post('/auth/register', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
@@ -105,7 +105,7 @@ app.get('/auth/me', authMiddleware, async (req, res) => {
   res.json({ ok: true, user });
 });
 
-// ── Posts endpoints ───────────────────────────────────────────
+// ── Posts ─────────────────────────────────────────────────────
 app.get('/posts', async (req, res) => {
   const posts = await Post.find().sort({ creadoEn: -1 });
   res.json(posts);
@@ -118,8 +118,23 @@ app.post('/posts', async (req, res) => {
 });
 
 app.delete('/posts/:id', async (req, res) => {
-  await Post.findByIdAndDelete(req.params.id);
-  res.json({ ok: true });
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    // Eliminar media de ImageKit si existe
+    if (post.mediaFileId) {
+      try {
+        await imagekit.deleteFile(post.mediaFileId);
+        console.log('Media eliminada de ImageKit:', post.mediaFileId);
+      } catch (ikErr) {
+        console.warn('No se pudo eliminar de ImageKit:', ikErr.message);
+      }
+    }
+    await Post.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.patch('/posts/:id', async (req, res) => {
@@ -145,7 +160,7 @@ app.post('/upload', upload.single('archivo'), async (req, res) => {
   }
 });
 
-// ── Generar caption ───────────────────────────────────────────
+// ── Caption IA ────────────────────────────────────────────────
 app.post('/generar-caption', async (req, res) => {
   const { tema, prompt, plataforma, tono } = req.body;
   const topico = prompt || tema || 'contenido general';
@@ -160,7 +175,7 @@ app.post('/generar-caption', async (req, res) => {
         model: 'llama-3.1-8b-instant',
         messages: [{
           role: 'user',
-          content: `Eres un experto en marketing digital para redes sociales en Colombia. Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${topico}". Tono: ${tono || 'profesional y cercano'}. Incluye emojis relevantes y máximo 3 hashtags al final. Responde SOLO con el caption, sin explicaciones adicionales.`
+          content: `Eres un experto en marketing digital para redes sociales en Colombia. Genera un caption profesional y atractivo para ${plataforma || 'Instagram'} sobre: "${topico}". Tono: ${tono || 'profesional y cercano'}. Incluye emojis relevantes y máximo 3 hashtags al final. Responde SOLO con el caption, sin explicaciones.`
         }],
         max_tokens: 300
       })
@@ -174,7 +189,7 @@ app.post('/generar-caption', async (req, res) => {
 });
 
 // ── Health ────────────────────────────────────────────────────
-app.get('/', (req, res) => res.json({ mensaje: 'PostFlow API funcionando', version: '2.0' }));
+app.get('/', (req, res) => res.json({ mensaje: 'PostFlow API v2.0', status: 'ok' }));
 
 // ── Start ─────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
