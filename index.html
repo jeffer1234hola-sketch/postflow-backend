@@ -465,7 +465,7 @@
   /* ── AUTH SCREEN ── */
   #auth-screen {
     position: fixed; inset: 0; z-index: 1000;
-    background: #050510;
+    background: #08010f;
     display: flex; align-items: center; justify-content: center;
     padding: 20px;
     overflow: hidden;
@@ -473,28 +473,34 @@
   #auth-screen::before {
     content: '';
     position: absolute; inset: 0;
-    background-image: 
-      linear-gradient(rgba(124,92,252,0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(124,92,252,0.15) 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: gridMove 8s linear infinite;
+    background:
+      conic-gradient(from 180deg at 50% 100%, #2d0050 0deg, #ff00cc22 40deg, #7c5cfc44 80deg, #08010f 120deg, #08010f 240deg, #ff00cc22 300deg, #2d0050 360deg);
+    animation: rotateBg 12s linear infinite;
+    opacity: 0.9;
   }
   #auth-screen::after {
     content: '';
     position: absolute; inset: 0;
-    background: 
-      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(124,92,252,0.2) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 60% at 80% 30%, rgba(192,132,252,0.15) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 40% at 60% 80%, rgba(0,212,255,0.1) 0%, transparent 70%);
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 100%, rgba(255,0,204,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 50% 0%, rgba(124,92,252,0.2) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(8,1,15,0.7) 0%, transparent 100%);
     animation: glowPulse 4s ease-in-out infinite alternate;
   }
-  @keyframes gridMove {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(40px); }
+  @keyframes rotateBg {
+    0% { transform: rotate(0deg) scale(2); }
+    100% { transform: rotate(360deg) scale(2); }
   }
   @keyframes glowPulse {
-    0% { opacity: 0.6; }
+    0% { opacity: 0.7; }
     100% { opacity: 1; }
+  }
+  .auth-box {
+    position: relative; z-index: 2;
+    background: rgba(12,4,24,0.85);
+    border: 1px solid rgba(255,0,204,0.25);
+    box-shadow: 0 0 40px rgba(124,92,252,0.2), 0 0 80px rgba(255,0,204,0.1);
+    backdrop-filter: blur(16px);
   }
   #auth-screen.hidden { display: none; }
   .auth-box {
