@@ -1964,7 +1964,12 @@ async function doRegister() {
   try {
     const res = await fetch(`${API}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nombre, email, password }) });
     const data = await res.json();
-    if (!res.ok) return showAuthError(data.error || 'Error al registrarse');
+    if (!res.ok) return showAuthError
+    (data.error || 'Error al registrarse');
+    if (data.requiresVerification) {
+  showAuthError('✅ Cuenta creada. Revisá tu email para verificarla.');
+  return;
+}
     localStorage.setItem('pf_token', data.token);
     localStorage.setItem('pf_user', JSON.stringify(data.user));
     mostrarApp(data.user);
