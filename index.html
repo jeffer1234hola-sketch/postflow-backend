@@ -502,7 +502,8 @@
     box-shadow: 0 0 40px rgba(124,92,252,0.2), 0 0 80px rgba(255,0,204,0.1);
     backdrop-filter: blur(16px);
   }
-  #auth-screen.hidden { display: none; }
+  
+  
   .auth-box {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.12);
@@ -914,9 +915,9 @@
 
   <!-- SIDEBAR -->
   <nav id="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-icon"><img src="https://ik.imagekit.io/postflowjj/logo_H2ZX5MffJ.png" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"/></div>
-      Post<span>Flow</span>
+    <div class="sidebar-logo" style="gap:0;align-items:center;">
+      <img src="https://ik.imagekit.io/postflowjj/logo_H2ZX5MffJ.png" style="width:38px;height:38px;object-fit:contain;margin-right:-6px;"/>
+      <span style="color:var(--text);font-family:var(--font-head);font-size:1.25rem;font-weight:800;">ost</span><span style="color:var(--accent2);font-family:var(--font-head);font-size:1.25rem;font-weight:800;">Flow</span>
     </div>
     <div class="nav-section">General</div>
     <div class="nav-item active" data-view="dashboard"><span class="icon">◈</span> Dashboard</div>
