@@ -1979,7 +1979,7 @@ async function doLogin() {
   try {
     const res = await fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
     const data = await res.json();
-    if (!res.ok) return showAuthError(data.error || 'Error al iniciar sesión');
+    if (!res.ok) { showAuthError(data.error || 'Error al iniciar sesión'); if (data.requiresVerification) { document.getElementById('auth-error').innerHTML += ' <a href="#" onclick="reenviarVerificacion()" style="color:var(--accent2);font-weight:600;text-decoration:underline;">Reenviar email</a>'; } return; }
     localStorage.setItem('pf_token', data.token);
     localStorage.setItem('pf_user', JSON.stringify(data.user));
     mostrarApp(data.user);
@@ -2028,6 +2028,21 @@ function mostrarApp(user) {
   cargarPosts();
 }
 
+async function reenviarVerificacion() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) return showAuthError('Ingresá tu email primero');
+  try {
+    const res = await fetch(`${API}/auth/resend-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    showAuthError(res.ok ? '✅ Email reenviado. Revisá tu bandeja.' : data.error || 'Error al reenviar');
+  } catch {
+    showAuthError('Error de conexión');
+  }
+}
 function doLogout() {
   if (!confirm('¿Cerrar sesión?')) return;
   localStorage.removeItem('pf_token');
