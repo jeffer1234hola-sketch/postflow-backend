@@ -927,7 +927,7 @@
     <div class="nav-item" data-view="nuevo"><span class="icon">＋</span> Nuevo Post</div>
     <div class="nav-item" data-view="cola"><span class="icon">☰</span> Cola de Posts</div>
     <div class="nav-item" data-view="biblioteca"><span class="icon">◫</span> Biblioteca</div>
-    <div class="nav-item" data-view="calendario"><span class="icon">◷</span> Calendario</div>
+    <div class="nav-item" data-view="conexiones"><span class="icon">🔗</span> Conexiones</div>
     <div class="sidebar-footer">
       <div class="badge">v0.85 Alpha</div>
       <p>PostFlow · Programador de redes sociales con IA</p>
@@ -1139,6 +1139,42 @@
         </div>
       </div>
 
+    <!-- ── CONEXIONES ── -->
+      <div class="view" id="view-conexiones">
+        <div class="section-title" style="margin-bottom:20px;">Mis Conexiones</div>
+        <div style="background:rgba(124,92,252,.07);border:1px solid rgba(124,92,252,.2);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--muted);display:flex;gap:10px;margin-bottom:24px;">
+          <span style="font-size:16px;flex-shrink:0">💡</span>
+          <span>PostFlow publica en tu nombre usando OAuth seguro. Tus contraseñas nunca son almacenadas. Los tokens se renuevan automáticamente cada 60 días.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;" id="conexiones-grid">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📸</div>
+            <div style="flex:1;">
+              <div style="font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:3px;">Instagram & Facebook</div>
+              <div id="meta-conn-desc" style="font-size:13px;color:var(--muted);">Publica fotos, reels y stories</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span id="meta-status-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);">
+                <span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span> Sin conectar
+              </span>
+              <button id="meta-conn-btn" class="btn primary" onclick="conectarMeta()" style="font-size:13px;padding:9px 18px;">Conectar</button>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;border-radius:14px;background:#111;border:1px solid #222;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🎵</div>
+            <div style="flex:1;">
+              <div style="font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:3px;">TikTok</div>
+              <div style="font-size:13px;color:var(--muted);">Publica videos directamente en tu perfil</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);">
+                <span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span> En revisión
+              </span>
+              <button class="btn" style="font-size:13px;padding:9px 18px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);cursor:not-allowed;" disabled>Próximamente</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -2057,6 +2093,16 @@ document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('user-avatar').textContent = inicial;
   document.getElementById('user-nombre').textContent = user.nombre;
   cargarPosts();
+  checkMetaStatus();
+  const oauthSuccess = localStorage.getItem('pf_oauth_success');
+  const oauthError = localStorage.getItem('pf_oauth_error');
+  if (oauthSuccess) {
+    localStorage.removeItem('pf_oauth_success');
+    setTimeout(() => { toast('Instagram/Facebook conectado 🎉', 'success'); navTo('conexiones'); }, 800);
+  } else if (oauthError) {
+    localStorage.removeItem('pf_oauth_error');
+    setTimeout(() => toast('Error al conectar con Meta', 'error'), 800);
+  }
 }
 
 async function reenviarVerificacion() {
@@ -2234,6 +2280,56 @@ function mostrarPostsDia(dia, posts) {
   modal.style.display = 'block';
 }
 
+// ── META OAUTH ────────────────────────────────
+function conectarMeta() {
+  const token = localStorage.getItem('pf_token');
+  if (!token) return toast('Iniciá sesión primero', 'error');
+  window.location.href = `${API}/auth/meta?token=${token}`;
+}
+
+async function checkMetaStatus() {
+  const token = localStorage.getItem('pf_token');
+  if (!token) return;
+  try {
+    const res = await apiFetch(`${API}/auth/meta/status`);
+    if (!res) return;
+    const data = await res.json();
+    const badge = document.getElementById('meta-status-badge');
+    const btn = document.getElementById('meta-conn-btn');
+    const desc = document.getElementById('meta-conn-desc');
+    if (!badge) return;
+    if (data.connected) {
+      badge.style.background = 'rgba(52,211,153,.1)';
+      badge.style.color = '#34d399';
+      badge.style.borderColor = 'rgba(52,211,153,.2)';
+      badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:currentColor;animation:spin .7s linear infinite"></span> Conectado';
+      const ig = data.instagramAccount;
+      desc.textContent = ig ? `@${ig.username}` : data.fbUserName || 'Conectado';
+      btn.textContent = 'Desconectar';
+      btn.className = 'btn';
+      btn.style = 'font-size:13px;padding:9px 18px;background:transparent;color:var(--danger);border:1px solid rgba(248,113,113,.25);';
+      btn.onclick = desconectarMeta;
+    }
+  } catch(e) {}
+}
+
+async function desconectarMeta() {
+  if (!confirm('¿Desconectar tu cuenta de Instagram/Facebook?')) return;
+  const res = await apiFetch(`${API}/auth/meta/disconnect`, { method: 'DELETE' });
+  if (res?.ok) { toast('Cuenta Meta desconectada'); checkMetaStatus(); }
+}
+
+// Detectar redirect de OAuth
+(function checkOAuthRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('success') === 'meta') {
+    history.replaceState({}, '', '/');
+    localStorage.setItem('pf_oauth_success', 'meta');
+  } else if (params.get('error')) {
+    history.replaceState({}, '', '/');
+    localStorage.setItem('pf_oauth_error', params.get('error'));
+  }
+})();
 // ── INIT CON AUTH ──────────────────────────────────────────────
 (function checkAuth() {
   const token = localStorage.getItem('pf_token');
