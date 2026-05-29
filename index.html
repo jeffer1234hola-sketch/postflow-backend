@@ -2139,5 +2139,31 @@ function mostrarPostsDia(dia, posts) {
 })();
 
 </script>
+<script>
+  (function() {
+    const path = window.location.pathname;
+    if (path === '/verify') {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const email = params.get('email');
+      if (token && email) {
+        fetch(`https://postflow-backend-production-983c.up.railway.app/auth/verify?token=${token}&email=${encodeURIComponent(email)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.message) {
+              alert('✅ Cuenta verificada. Ya podés iniciar sesión.');
+            } else {
+              alert('❌ Error al verificar: ' + (data.error || 'Token inválido'));
+            }
+            window.location.href = '/';
+          })
+          .catch(() => {
+            alert('❌ Error de conexión al verificar.');
+            window.location.href = '/';
+          });
+      }
+    }
+  })();
+</script>
 </body>
 </html>
