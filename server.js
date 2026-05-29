@@ -7,10 +7,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { Resend } = require('resend');
+const authMetaRoutes = require('./routes/authMeta');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/auth', authMetaRoutes);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'postflow_secret_2026';
 const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/2wpe45g4j9po6d2896ef75tw6mxlqs70';
