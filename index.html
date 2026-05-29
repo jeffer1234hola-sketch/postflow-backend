@@ -2311,16 +2311,21 @@ async function checkMetaStatus() {
     const desc = document.getElementById('meta-conn-desc');
     if (!badge) return;
     if (data.connected) {
-      badge.style.background = 'rgba(52,211,153,.1)';
-      badge.style.color = '#34d399';
-      badge.style.borderColor = 'rgba(52,211,153,.2)';
-      badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:currentColor;animation:spin .7s linear infinite"></span> Conectado';
-      const ig = data.instagramAccount;
-      desc.textContent = ig ? `@${ig.username}` : data.fbUserName || 'Conectado';
-      btn.textContent = 'Desconectar';
-      btn.className = 'btn';
-      btn.style = 'font-size:13px;padding:9px 18px;background:transparent;color:var(--danger);border:1px solid rgba(248,113,113,.25);';
-      btn.onclick = desconectarMeta;
+      const verde = 'display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.2);';
+      const desconectarStyle = 'font-size:13px;padding:9px 18px;background:transparent;color:var(--danger);border:1px solid rgba(248,113,113,.25);';
+      const dot = '<span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span> Conectado';
+      const igBadge = document.getElementById('meta-status-badge');
+      const igBtn = document.getElementById('meta-conn-btn');
+      const igDesc = document.getElementById('ig-conn-desc');
+      const fbBadge = document.getElementById('fb-status-badge');
+      const fbBtn = document.getElementById('fb-conn-btn');
+      const fbDesc = document.getElementById('meta-conn-desc');
+      if (igBadge) { igBadge.style.cssText = verde; igBadge.innerHTML = dot; }
+      if (igDesc) igDesc.textContent = data.instagramAccount ? `@${data.instagramAccount.username}` : 'Cuenta conectada';
+      if (igBtn) { igBtn.textContent = 'Desconectar'; igBtn.className = 'btn'; igBtn.style.cssText = desconectarStyle; igBtn.onclick = desconectarMeta; }
+      if (fbBadge) { fbBadge.style.cssText = verde; fbBadge.innerHTML = dot; }
+      if (fbDesc) fbDesc.textContent = data.fbUserName || 'Cuenta conectada';
+      if (fbBtn) { fbBtn.textContent = 'Desconectar'; fbBtn.className = 'btn'; fbBtn.style.cssText = desconectarStyle; fbBtn.onclick = desconectarMeta; }
     }
   } catch(e) {}
 }
