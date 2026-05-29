@@ -247,6 +247,7 @@ app.post('/auth/register', async (req, res) => {
   }
 });
 
+
 // ── Verificar email ───────────────────────────────────────────
 app.get('/auth/verify', async (req, res) => {
   try {
