@@ -2021,7 +2021,7 @@ async function doRegister() {
 }
 
 function mostrarApp(user) {
-  document.getElementById('auth-screen').classList.add('hidden');
+document.getElementById('auth-screen').style.display = 'none';
   const inicial = (user.nombre || 'U')[0].toUpperCase();
   document.getElementById('user-avatar').textContent = inicial;
   document.getElementById('user-nombre').textContent = user.nombre;
