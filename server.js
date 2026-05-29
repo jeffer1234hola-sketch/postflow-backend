@@ -302,7 +302,59 @@ app.post('/auth/resend-verification', async (req, res) => {
   }
 });
 
-app.post('/auth/login', async (req, res) => {
+// ── Olvidé mi contraseña ──────────────────────────────────────
+app.post('/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email requerido' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.json({ ok: true, mensaje: 'Si el email existe, recibirás un enlace.' });
+    const token = crypto.randomBytes(32).toString('hex');
+    user.tokenVerificacion = token;
+    user.tokenExpira = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+    await user.save();
+    const url = `${FRONTEND_URL}/reset-password?token=${token}&email=${email}`;
+    await enviarEmail({
+      to: email,
+      subject: '🔑 Restablecer contraseña de PostFlow',
+      html: `
+        <div style="max-width:480px;margin:40px auto;background:#111118;border:1px solid #242430;border-radius:16px;overflow:hidden;font-family:-apple-system,sans-serif;">
+          <div style="background:linear-gradient(135deg,#7c5cfc,#c084fc);padding:32px;text-align:center;">
+            <h1 style="margin:0;color:#fff;font-size:24px;font-weight:800;">✦ PostFlow</h1>
+          </div>
+          <div style="padding:32px;">
+            <h2 style="color:#f0eeff;font-size:20px;margin:0 0 16px;">Restablecer contraseña</h2>
+            <p style="color:#8887a0;font-size:15px;line-height:1.6;margin:0 0 24px;">Hacé clic en el botón para crear una nueva contraseña. Este enlace expira en 1 hora.</p>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="${url}" style="background:linear-gradient(135deg,#7c5cfc,#c084fc);color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px;display:inline-block;">🔑 Restablecer contraseña</a>
+            </div>
+            <p style="color:#8887a0;font-size:13px;">Si no solicitaste esto, ignorá este email.</p>
+          </div>
+        </div>`
+    });
+    res.json({ ok: true, mensaje: 'Si el email existe, recibirás un enlace.' });
+  } catch(e) {
+    res.status(500).json({ error: 'Error al procesar solicitud' });
+  }
+});
+
+app.post('/auth/reset-password', async (req, res) => {
+  try {
+    const { token, email, password } = req.body;
+    if (!token || !email || !password) return res.status(400).json({ error: 'Datos incompletos' });
+    if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    const user = await User.findOne({ email: email.toLowerCase(), tokenVerificacion: token });
+    if (!user) return res.status(400).json({ error: 'Token inválido o expirado' });
+    if (user.tokenExpira < new Date()) return res.status(400).json({ error: 'Token expirado. Solicitá uno nuevo.' });
+    user.password = await bcrypt.hash(password, 12);
+    user.tokenVerificacion = null;
+    user.tokenExpira = null;
+    await user.save();
+    res.json({ ok: true, mensaje: 'Contraseña actualizada correctamente' });
+  } catch(e) {
+    res.status(500).json({ error: 'Error al restablecer contraseña' });
+  }
+});app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
